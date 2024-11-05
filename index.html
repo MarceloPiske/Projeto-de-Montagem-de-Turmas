@@ -146,7 +146,7 @@ body {
     <!-- Módulo Disciplinas -->
     <div id="disciplinas" class="module-content">
         <h2>Gestão de Disciplinas</h2>
-        <button class="btn btn-primary mb-3" onclick="showForm('disciplina')">Nova Disciplina</button>
+        <button class="btn btn-primary mb-3" onclick="showForm('disciplina')" >Nova Disciplina</button>
         
         <!-- Formulário de Disciplina -->
         <div id="disciplinaForm" class="card mb-3" style="display:none;">
@@ -168,6 +168,12 @@ body {
                             <!-- Will be populated dynamically -->
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sala</label>
+                        <select class="form-select" id="disciplinaSala" required>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
                     <button type="submit" class="btn btn-success" style="color: black;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="hideForm('disciplina')" style="color: black;">Cancelar</button>
                 </form>
@@ -182,6 +188,7 @@ body {
                     <th>Nome</th>
                     <th>Carga Horária</th>
                     <th>Professores</th>
+                    <th>Sala</th>
                     <th>Status</th>
                     <th>Ações</th>
                 </tr>
@@ -287,12 +294,6 @@ body {
                             <!-- Will be populated dynamically -->
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Sala</label>
-                        <select class="form-select" id="turmaSala" required>
-                            <!-- Will be populated dynamically -->
-                        </select>
-                    </div>
                     <button type="submit" class="btn btn-success" style="color: black;">Salvar</button>
                     <button type="button" class="btn btn-secondary" onclick="hideForm('turma')" style="color: black;">Cancelar</button>
                 </form>
@@ -306,7 +307,6 @@ body {
                     <th>ID</th>
                     <th>Nome</th>
                     <th>Disciplinas</th>
-                    <th>Sala</th>
                     <th>Status</th>
                     <th>Ações</th>
                 </tr>
@@ -330,16 +330,54 @@ body {
                 <div class="accordion" id="tutorialAccordion">
                     <div class="accordion-item">
                         <h2 class="accordion-header">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#disciplinasHelp">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#ordemPreenchimento">
+                                Ordem de Preenchimento
+                            </button>
+                        </h2>
+                        <div id="ordemPreenchimento" class="accordion-collapse collapse show" data-bs-parent="#tutorialAccordion">
+                            <div class="accordion-body">
+                                <p>Para o correto funcionamento do sistema, siga a ordem de cadastro abaixo:</p>
+                                <ol>
+                                    <li>1º - Cadastre os <strong>Professores</strong>
+                                        <ul>
+                                            <li>São necessários para associar às disciplinas</li>
+                                        </ul>
+                                    </li>
+                                    <li>2º - Cadastre as <strong>Salas</strong>
+                                        <ul>
+                                            <li>São necessárias para associar às disciplinas</li>
+                                        </ul>
+                                    </li>
+                                    <li>3º - Cadastre as <strong>Disciplinas</strong>
+                                        <ul>
+                                            <li>Exige professores e sala já cadastrados</li>
+                                            <li>Uma disciplina pode ter vários professores</li>
+                                            <li>Cada disciplina deve ter uma sala específica</li>
+                                        </ul>
+                                    </li>
+                                    <li>4º - Por fim, cadastre as <strong>Turmas</strong>
+                                        <ul>
+                                            <li>Exige disciplinas já cadastradas</li>
+                                            <li>Uma turma pode ter várias disciplinas</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#disciplinasHelp">
                                 Gerenciando Disciplinas
                             </button>
                         </h2>
-                        <div id="disciplinasHelp" class="accordion-collapse collapse show" data-bs-parent="#tutorialAccordion">
+                        <div id="disciplinasHelp" class="accordion-collapse collapse" data-bs-parent="#tutorialAccordion">
                             <div class="accordion-body">
                                 <ol>
                                     <li>Clique em "Nova Disciplina" para adicionar uma disciplina</li>
                                     <li>Preencha o nome e a carga horária</li>
                                     <li>Selecione um ou mais professores para a disciplina</li>
+                                    <li>Escolha a sala para a disciplina</li>
                                     <li>Use os botões de ação para:
                                         <ul>
                                             <li><i class="fa-solid fa-pen-to-square"></i> Editar a disciplina</li>
@@ -406,7 +444,6 @@ body {
                                     <li>Clique em "Nova Turma" para adicionar uma turma</li>
                                     <li>Preencha o nome da turma</li>
                                     <li>Selecione uma ou mais disciplinas</li>
-                                    <li>Escolha uma sala disponível</li>
                                     <li>Use os botões de ação para:
                                         <ul>
                                             <li><i class="fa-solid fa-pen-to-square"></i> Editar a turma</li>
@@ -506,6 +543,7 @@ function saveDisciplina(event) {
         nome: document.getElementById('disciplinaNome').value,
         cargaHoraria: parseInt(document.getElementById('disciplinaCarga').value),
         professorIds: Array.from(document.getElementById('disciplinaProfessores').selectedOptions).map(opt => opt.value),
+        salaId: document.getElementById('disciplinaSala').value,
         status: 'Ativo',
         updatedAt: new Date().toISOString(), // Add timestamp for Firestore
         createdAt: new Date().toISOString() // Add timestamp for Firestore
@@ -528,6 +566,7 @@ function editDisciplina(id) {
     document.getElementById('disciplinaId').value = disciplina.id;
     document.getElementById('disciplinaNome').value = disciplina.nome;
     document.getElementById('disciplinaCarga').value = disciplina.cargaHoraria;
+    document.getElementById('disciplinaSala').value = disciplina.salaId;
     const profSelect = document.getElementById('disciplinaProfessores');
     for(let option of profSelect.options) {
         option.selected = disciplina.professorIds.includes(option.value);
@@ -552,12 +591,14 @@ function refreshTable() {
             .map(id => professores.find(p => p.id == id)?.nome)
             .filter(Boolean)
             .join(', ');
+        const salaName = salas.find(s => s.id == disciplina.salaId)?.nome || '';
             
         table.row.add([
             disciplina.id,
             disciplina.nome,
             disciplina.cargaHoraria,
             professorNames,
+            salaName,
             disciplina.status,
             `<button class="btn btn-primary btn-circle" onclick="editDisciplina(${disciplina.id})">
                 <i class="fa-solid fa-pen-to-square"></i>
@@ -699,7 +740,6 @@ function saveTurma(event) {
         id: document.getElementById('turmaId').value || Date.now().toString(),
         nome: document.getElementById('turmaNome').value,
         disciplinaIds: Array.from(document.getElementById('turmaDisciplinas').selectedOptions).map(opt => opt.value),
-        salaId: document.getElementById('turmaSala').value,
         status: 'Ativo',
         updatedAt: new Date().toISOString(),
         createdAt: new Date().toISOString()
@@ -725,7 +765,6 @@ function editTurma(id) {
     for(let option of discSelect.options) {
         option.selected = turma.disciplinaIds.includes(option.value);
     }
-    document.getElementById('turmaSala').value = turma.salaId;
     showForm('turma');
 }
 
@@ -746,13 +785,11 @@ function refreshTurmaTable() {
             .map(id => disciplinas.find(d => d.id == id)?.nome)
             .filter(Boolean)
             .join(', ');
-        const salaName = salas.find(s => s.id == turma.salaId)?.nome || '';
-        
+            
         table.row.add([
             turma.id,
             turma.nome,
             disciplinaNames,
-            salaName,
             turma.status,
             `<button class="btn btn-primary btn-circle" onclick="editTurma(${turma.id})">
                 <i class="fa-solid fa-pen-to-square"></i>
@@ -778,32 +815,37 @@ function populateSelects() {
         profSelect.appendChild(opt);
     });
 
+    // Populate salas select for disciplinas
+    const salaSelect = document.getElementById('disciplinaSala');
+    if (salaSelect) {
+        salaSelect.innerHTML = '';
+        salas.filter(s => s.status === 'Ativo').forEach(sala => {
+            const opt = document.createElement('option');
+            opt.value = sala.id;
+            opt.textContent = sala.nome;
+            salaSelect.appendChild(opt);
+        });
+    }
+
     // Populate disciplines select
     const discSelect = document.getElementById('turmaDisciplinas');
-    discSelect.innerHTML = '';
-    disciplinas.filter(d => d.status === 'Ativo').forEach(disc => {
-        const opt = document.createElement('option');
-        opt.value = disc.id;
-        opt.textContent = disc.nome;
-        discSelect.appendChild(opt);
-    });
-
-    // Populate salas select
-    const salaSelect = document.getElementById('turmaSala');
-    salaSelect.innerHTML = '';
-    salas.filter(s => s.status === 'Ativo' && !s.turmaId).forEach(sala => {
-        const opt = document.createElement('option');
-        opt.value = sala.id;
-        opt.textContent = sala.nome;
-        salaSelect.appendChild(opt);
-    });
+    if (discSelect) {
+        discSelect.innerHTML = '';
+        disciplinas.filter(d => d.status === 'Ativo').forEach(disc => {
+            const opt = document.createElement('option');
+            opt.value = disc.id;
+            opt.textContent = disc.nome;
+            discSelect.appendChild(opt);
+        });
+    }
 }
 
 // Inicialização
 $(document).ready(function() {
-    // Add this at the beginning of the ready function:
+    // Load data
     loadFromStorage();
 
+    // Initialize DataTables
     const disciplinasTable = document.getElementById('disciplinasTable');
     if (disciplinasTable) {
         $('#disciplinasTable').DataTable({
@@ -836,6 +878,12 @@ $(document).ready(function() {
             }
         });
     }
+
+    // Refresh all tables after loading data
+    refreshTable(); // Refresh disciplinas table
+    refreshProfessorTable(); // Refresh professores table
+    refreshSalaTable(); // Refresh salas table
+    refreshTurmaTable(); // Refresh turmas table
 
     const initialModule = document.getElementById('disciplinas');
     if (initialModule) {
