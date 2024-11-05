@@ -1,0 +1,868 @@
+<html><head>
+<title>Sistema de Gestão de Turmas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- DataTables CSS -->
+<link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<!-- Font Awesome CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+body {
+    position: relative;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    overflow-x: hidden;
+}
+
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: linear-gradient(45deg, #2c3e50, #3498db);
+}
+
+.background-animation::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, #1a3f5c, #2980b9);
+    clip-path: circle(50% at 0% 50%);
+    animation: morphBackground 15s ease-in-out infinite alternate;
+}
+
+@keyframes morphBackground {
+    0% {
+        clip-path: circle(50% at 0% 50%);
+    }
+    25% {
+        clip-path: circle(50% at 100% 50%);
+    }
+    50% {
+        clip-path: circle(50% at 50% 0%);
+    }
+    75% {
+        clip-path: circle(50% at 50% 100%);
+    }
+    100% {
+        clip-path: circle(50% at 0% 50%);
+    }
+}
+
+/* Update container background for better readability */
+.container {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+/* Update card styling */
+.card {
+    background: rgba(255, 255, 255, 0.98);
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* Update navbar brand and links to black */
+.navbar-custom {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    color: #000 !important; /* Changed from #fff to #000 */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nav-link {
+    color: rgba(0,0,0,0.9) !important; /* Changed from rgba(255,255,255,0.9) to rgba(0,0,0,0.9) */
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover, 
+.nav-link.active {
+    color: #000 !important; /* Changed from #fff to #000 */
+    text-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.navbar-custom .navbar-toggler {
+    border-color: rgba(0,0,0,0.5);
+}
+
+.navbar-custom .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%280, 0, 0, 0.75%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+</style>
+</head>
+<body>
+<div class="background-animation"></div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="#">Sistema de Gestão de Turmas</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#" onclick="showModule('disciplinas')">Disciplinas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showModule('professores')">Professores</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showModule('salas')">Salas</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" onclick="showModule('turmas')">Turmas</a>
+                </li>
+                <li class="nav-item ms-auto">
+                    <a class="nav-link" href="#" onclick="showTutorial()">
+                        <i class="fas fa-question-circle"></i> Ajuda
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Conteúdo Principal -->
+<div class="container">
+    <!-- Módulo Disciplinas -->
+    <div id="disciplinas" class="module-content">
+        <h2>Gestão de Disciplinas</h2>
+        <button class="btn btn-primary mb-3" onclick="showForm('disciplina')" style="color: black;">Nova Disciplina</button>
+        
+        <!-- Formulário de Disciplina -->
+        <div id="disciplinaForm" class="card mb-3" style="display:none;">
+            <div class="card-body">
+                <h5 class="card-title">Formulário de Disciplina</h5>
+                <form id="formDisciplina" onsubmit="saveDisciplina(event)">
+                    <input type="hidden" id="disciplinaId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Disciplina</label>
+                        <input type="text" class="form-control" id="disciplinaNome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Carga Horária</label>
+                        <input type="number" class="form-control" id="disciplinaCarga" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Professores</label>
+                        <select class="form-select" id="disciplinaProfessores" multiple required>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="color: black;">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideForm('disciplina')" style="color: black;">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Disciplinas -->
+        <table id="disciplinasTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Carga Horária</th>
+                    <th>Professores</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dados serão inseridos via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Módulo Professores -->
+    <div id="professores" class="module-content" style="display: none;">
+        <h2>Gestão de Professores</h2>
+        <button class="btn btn-primary mb-3" onclick="showForm('professor')" style="color: black;">Novo Professor</button>
+        
+        <!-- Formulário de Professor -->
+        <div id="professorForm" class="card mb-3" style="display:none;">
+            <div class="card-body">
+                <h5 class="card-title">Formulário de Professor</h5>
+                <form id="formProfessor" onsubmit="saveProfessor(event)">
+                    <input type="hidden" id="professorId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome do Professor</label>
+                        <input type="text" class="form-control" id="professorNome" required>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="color: black;">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideForm('professor')" style="color: black;">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Professores -->
+        <table id="professoresTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dados serão inseridos via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Módulo Salas -->
+    <div id="salas" class="module-content" style="display: none;">
+        <h2>Gestão de Salas</h2>
+        <button class="btn btn-primary mb-3" onclick="showForm('sala')" style="color: black;">Nova Sala</button>
+        
+        <!-- Formulário de Sala -->
+        <div id="salaForm" class="card mb-3" style="display:none;">
+            <div class="card-body">
+                <h5 class="card-title">Formulário de Sala</h5>
+                <form id="formSala" onsubmit="saveSala(event)">
+                    <input type="hidden" id="salaId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Sala</label>
+                        <input type="text" class="form-control" id="salaNome" required>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="color: black;">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideForm('sala')" style="color: black;">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Salas -->
+        <table id="salasTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dados serão inseridos via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Módulo Turmas -->
+    <div id="turmas" class="module-content" style="display: none;">
+        <h2>Gestão de Turmas</h2>
+        <button class="btn btn-primary mb-3" onclick="showForm('turma')" style="color: black;">Nova Turma</button>
+        
+        <!-- Formulário de Turma -->
+        <div id="turmaForm" class="card mb-3" style="display:none;">
+            <div class="card-body">
+                <h5 class="card-title">Formulário de Turma</h5>
+                <form id="formTurma" onsubmit="saveTurma(event)">
+                    <input type="hidden" id="turmaId">
+                    <div class="mb-3">
+                        <label class="form-label">Nome da Turma</label>
+                        <input type="text" class="form-control" id="turmaNome" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Disciplinas</label>
+                        <select class="form-select" id="turmaDisciplinas" multiple required>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sala</label>
+                        <select class="form-select" id="turmaSala" required>
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-success" style="color: black;">Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideForm('turma')" style="color: black;">Cancelar</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Tabela de Turmas -->
+        <table id="turmasTable" class="table table-striped">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Disciplinas</th>
+                    <th>Sala</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Dados serão inseridos via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Tutorial Modal -->
+<div class="modal fade" id="tutorialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tutorial do Sistema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="accordion" id="tutorialAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#disciplinasHelp">
+                                Gerenciando Disciplinas
+                            </button>
+                        </h2>
+                        <div id="disciplinasHelp" class="accordion-collapse collapse show" data-bs-parent="#tutorialAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Clique em "Nova Disciplina" para adicionar uma disciplina</li>
+                                    <li>Preencha o nome e a carga horária</li>
+                                    <li>Selecione um ou mais professores para a disciplina</li>
+                                    <li>Use os botões de ação para:
+                                        <ul>
+                                            <li><i class="fa-solid fa-pen-to-square"></i> Editar a disciplina</li>
+                                            <li><i class="fa-solid fa-ban"></i> Desativar a disciplina</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#professoresHelp">
+                                Gerenciando Professores
+                            </button>
+                        </h2>
+                        <div id="professoresHelp" class="accordion-collapse collapse" data-bs-parent="#tutorialAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Clique em "Novo Professor" para adicionar um professor</li>
+                                    <li>Preencha o nome do professor</li>
+                                    <li>Os professores podem ser associados a múltiplas disciplinas</li>
+                                    <li>Use os botões de ação para:
+                                        <ul>
+                                            <li><i class="fa-solid fa-pen-to-square"></i> Editar o professor</li>
+                                            <li><i class="fa-solid fa-ban"></i> Desativar o professor</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#salasHelp">
+                                Gerenciando Salas
+                            </button>
+                        </h2>
+                        <div id="salasHelp" class="accordion-collapse collapse" data-bs-parent="#tutorialAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Clique em "Nova Sala" para adicionar uma sala</li>
+                                    <li>Preencha o nome da sala</li>
+                                    <li>Cada sala pode ser associada a apenas uma turma</li>
+                                    <li>Use os botões de ação para:
+                                        <ul>
+                                            <li><i class="fa-solid fa-pen-to-square"></i> Editar a sala</li>
+                                            <li><i class="fa-solid fa-ban"></i> Desativar a sala</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#turmasHelp">
+                                Gerenciando Turmas
+                            </button>
+                        </h2>
+                        <div id="turmasHelp" class="accordion-collapse collapse" data-bs-parent="#tutorialAccordion">
+                            <div class="accordion-body">
+                                <ol>
+                                    <li>Clique em "Nova Turma" para adicionar uma turma</li>
+                                    <li>Preencha o nome da turma</li>
+                                    <li>Selecione uma ou mais disciplinas</li>
+                                    <li>Escolha uma sala disponível</li>
+                                    <li>Use os botões de ação para:
+                                        <ul>
+                                            <li><i class="fa-solid fa-pen-to-square"></i> Editar a turma</li>
+                                            <li><i class="fa-solid fa-ban"></i> Desativar a turma</li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi!</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+// Variáveis globais
+const STORAGE_KEYS = {
+    DISCIPLINAS: 'app_disciplinas',
+    PROFESSORES: 'app_professores',
+    SALAS: 'app_salas',
+    TURMAS: 'app_turmas'
+};
+
+let disciplinas = [];
+let professores = [];
+let salas = [];
+let turmas = [];
+let currentModule = 'disciplinas';
+
+// Storage functions
+function loadFromStorage() {
+    disciplinas = JSON.parse(localStorage.getItem(STORAGE_KEYS.DISCIPLINAS) || '[]');
+    professores = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFESSORES) || '[]');
+    salas = JSON.parse(localStorage.getItem(STORAGE_KEYS.SALAS) || '[]');
+    turmas = JSON.parse(localStorage.getItem(STORAGE_KEYS.TURMAS) || '[]');
+}
+
+function saveToStorage() {
+    localStorage.setItem(STORAGE_KEYS.DISCIPLINAS, JSON.stringify(disciplinas));
+    localStorage.setItem(STORAGE_KEYS.PROFESSORES, JSON.stringify(professores));
+    localStorage.setItem(STORAGE_KEYS.SALAS, JSON.stringify(salas));
+    localStorage.setItem(STORAGE_KEYS.TURMAS, JSON.stringify(turmas));
+}
+
+// Funções de utilidade
+function showModule(moduleName) {
+    const moduleElement = document.getElementById(moduleName);
+    if (!moduleElement) {
+        console.error(`Módulo ${moduleName} não encontrado`);
+        return;
+    }
+
+    document.querySelectorAll('.module-content').forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+
+    moduleElement.style.display = 'block';
+
+    document.querySelectorAll('.nav-link').forEach(el => {
+        if (el) el.classList.remove('active');
+    });
+
+    const activeNavLink = document.querySelector(`[onclick="showModule('${moduleName}')"]`);
+    if (activeNavLink) {
+        activeNavLink.classList.add('active');
+    }
+
+    currentModule = moduleName;
+}
+
+function showForm(type) {
+    document.getElementById(`${type}Form`).style.display = 'block';
+}
+
+function hideForm(type) {
+    document.getElementById(`${type}Form`).style.display = 'none';
+    document.getElementById(`form${type.charAt(0).toUpperCase() + type.slice(1)}`).reset();
+}
+
+// Funções CRUD para Disciplinas
+function saveDisciplina(event) {
+    event.preventDefault();
+    
+    const disciplina = {
+        id: document.getElementById('disciplinaId').value || Date.now().toString(), // Change to string for Firestore compatibility
+        nome: document.getElementById('disciplinaNome').value,
+        cargaHoraria: parseInt(document.getElementById('disciplinaCarga').value),
+        professorIds: Array.from(document.getElementById('disciplinaProfessores').selectedOptions).map(opt => opt.value),
+        status: 'Ativo',
+        updatedAt: new Date().toISOString(), // Add timestamp for Firestore
+        createdAt: new Date().toISOString() // Add timestamp for Firestore
+    };
+
+    if (document.getElementById('disciplinaId').value) {
+        const index = disciplinas.findIndex(d => d.id === disciplina.id);
+        disciplinas[index] = {...disciplinas[index], ...disciplina, updatedAt: new Date().toISOString()};
+    } else {
+        disciplinas.push(disciplina);
+    }
+
+    saveToStorage();
+    hideForm('disciplina');
+    refreshTable();
+}
+
+function editDisciplina(id) {
+    const disciplina = disciplinas.find(d => d.id == id);
+    document.getElementById('disciplinaId').value = disciplina.id;
+    document.getElementById('disciplinaNome').value = disciplina.nome;
+    document.getElementById('disciplinaCarga').value = disciplina.cargaHoraria;
+    const profSelect = document.getElementById('disciplinaProfessores');
+    for(let option of profSelect.options) {
+        option.selected = disciplina.professorIds.includes(option.value);
+    }
+    showForm('disciplina');
+}
+
+function toggleDisciplina(id) {
+    const disciplina = disciplinas.find(d => d.id == id);
+    disciplina.status = disciplina.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    disciplina.updatedAt = new Date().toISOString();
+    saveToStorage();
+    refreshTable();
+}
+
+function refreshTable() {
+    const table = $('#disciplinasTable').DataTable();
+    table.clear();
+    
+    disciplinas.forEach(disciplina => {
+        const professorNames = disciplina.professorIds
+            .map(id => professores.find(p => p.id == id)?.nome)
+            .filter(Boolean)
+            .join(', ');
+            
+        table.row.add([
+            disciplina.id,
+            disciplina.nome,
+            disciplina.cargaHoraria,
+            professorNames,
+            disciplina.status,
+            `<button class="btn btn-primary btn-circle" onclick="editDisciplina(${disciplina.id})">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+             <button class="btn btn-${disciplina.status === 'Ativo' ? 'danger' : 'success'} btn-circle" onclick="toggleDisciplina(${disciplina.id})">
+                 <i class="fa-solid ${disciplina.status === 'Ativo' ? 'fa-ban' : 'fa-check'}"></i>
+             </button>`
+        ]);
+    });
+    
+    table.draw();
+}
+
+// Funções CRUD para Professores
+function saveProfessor(event) {
+    event.preventDefault();
+    
+    const professor = {
+        id: document.getElementById('professorId').value || Date.now().toString(),
+        nome: document.getElementById('professorNome').value,
+        status: 'Ativo',
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+
+    if (document.getElementById('professorId').value) {
+        const index = professores.findIndex(p => p.id === professor.id);
+        professores[index] = {...professores[index], ...professor, updatedAt: new Date().toISOString()};
+    } else {
+        professores.push(professor);
+    }
+
+    saveToStorage();
+    hideForm('professor');
+    refreshProfessorTable();
+}
+
+function editProfessor(id) {
+    const professor = professores.find(p => p.id == id);
+    document.getElementById('professorId').value = professor.id;
+    document.getElementById('professorNome').value = professor.nome;
+    showForm('professor');
+}
+
+function toggleProfessor(id) {
+    const professor = professores.find(p => p.id == id);
+    professor.status = professor.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    professor.updatedAt = new Date().toISOString();
+    saveToStorage();
+    refreshProfessorTable();
+}
+
+function refreshProfessorTable() {
+    const table = $('#professoresTable').DataTable();
+    table.clear();
+    
+    professores.forEach(professor => {
+        table.row.add([
+            professor.id,
+            professor.nome,
+            professor.status,
+            `<button class="btn btn-primary btn-circle" onclick="editProfessor(${professor.id})">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+             <button class="btn btn-${professor.status === 'Ativo' ? 'danger' : 'success'} btn-circle" onclick="toggleProfessor(${professor.id})">
+                 <i class="fa-solid ${professor.status === 'Ativo' ? 'fa-ban' : 'fa-check'}"></i>
+             </button>`
+        ]);
+    });
+    
+    table.draw();
+}
+
+// Funções CRUD para Salas
+function saveSala(event) {
+    event.preventDefault();
+    
+    const sala = {
+        id: document.getElementById('salaId').value || Date.now().toString(),
+        nome: document.getElementById('salaNome').value,
+        status: 'Ativo',
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+
+    if (document.getElementById('salaId').value) {
+        const index = salas.findIndex(s => s.id === sala.id);
+        salas[index] = {...salas[index], ...sala, updatedAt: new Date().toISOString()};
+    } else {
+        salas.push(sala);
+    }
+
+    saveToStorage();
+    hideForm('sala');
+    refreshSalaTable();
+}
+
+function editSala(id) {
+    const sala = salas.find(s => s.id == id);
+    document.getElementById('salaId').value = sala.id;
+    document.getElementById('salaNome').value = sala.nome;
+    showForm('sala');
+}
+
+function toggleSala(id) {
+    const sala = salas.find(s => s.id == id);
+    sala.status = sala.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    sala.updatedAt = new Date().toISOString();
+    saveToStorage();
+    refreshSalaTable();
+}
+
+function refreshSalaTable() {
+    const table = $('#salasTable').DataTable();
+    table.clear();
+    
+    salas.forEach(sala => {
+        table.row.add([
+            sala.id,
+            sala.nome,
+            sala.status,
+            `<button class="btn btn-primary btn-circle" onclick="editSala(${sala.id})">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+             <button class="btn btn-${sala.status === 'Ativo' ? 'danger' : 'success'} btn-circle" onclick="toggleSala(${sala.id})">
+                 <i class="fa-solid ${sala.status === 'Ativo' ? 'fa-ban' : 'fa-check'}"></i>
+             </button>`
+        ]);
+    });
+    
+    table.draw();
+}
+
+// Funções CRUD para Turmas
+function saveTurma(event) {
+    event.preventDefault();
+    
+    const turma = {
+        id: document.getElementById('turmaId').value || Date.now().toString(),
+        nome: document.getElementById('turmaNome').value,
+        disciplinaIds: Array.from(document.getElementById('turmaDisciplinas').selectedOptions).map(opt => opt.value),
+        salaId: document.getElementById('turmaSala').value,
+        status: 'Ativo',
+        updatedAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+    };
+
+    if (document.getElementById('turmaId').value) {
+        const index = turmas.findIndex(t => t.id === turma.id);
+        turmas[index] = {...turmas[index], ...turma, updatedAt: new Date().toISOString()};
+    } else {
+        turmas.push(turma);
+    }
+
+    saveToStorage();
+    hideForm('turma');
+    refreshTurmaTable();
+}
+
+function editTurma(id) {
+    const turma = turmas.find(t => t.id == id);
+    document.getElementById('turmaId').value = turma.id;
+    document.getElementById('turmaNome').value = turma.nome;
+    const discSelect = document.getElementById('turmaDisciplinas');
+    for(let option of discSelect.options) {
+        option.selected = turma.disciplinaIds.includes(option.value);
+    }
+    document.getElementById('turmaSala').value = turma.salaId;
+    showForm('turma');
+}
+
+function toggleTurma(id) {
+    const turma = turmas.find(t => t.id == id);
+    turma.status = turma.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    turma.updatedAt = new Date().toISOString();
+    saveToStorage();
+    refreshTurmaTable();
+}
+
+function refreshTurmaTable() {
+    const table = $('#turmasTable').DataTable();
+    table.clear();
+    
+    turmas.forEach(turma => {
+        const disciplinaNames = turma.disciplinaIds
+            .map(id => disciplinas.find(d => d.id == id)?.nome)
+            .filter(Boolean)
+            .join(', ');
+        const salaName = salas.find(s => s.id == turma.salaId)?.nome || '';
+        
+        table.row.add([
+            turma.id,
+            turma.nome,
+            disciplinaNames,
+            salaName,
+            turma.status,
+            `<button class="btn btn-primary btn-circle" onclick="editTurma(${turma.id})">
+                <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+             <button class="btn btn-${turma.status === 'Ativo' ? 'danger' : 'success'} btn-circle" onclick="toggleTurma(${turma.id})">
+                 <i class="fa-solid ${turma.status === 'Ativo' ? 'fa-ban' : 'fa-check'}"></i>
+             </button>`
+        ]);
+    });
+    
+    table.draw();
+}
+
+// Add function to populate select fields
+function populateSelects() {
+    // Populate professors select
+    const profSelect = document.getElementById('disciplinaProfessores');
+    profSelect.innerHTML = '';
+    professores.filter(p => p.status === 'Ativo').forEach(prof => {
+        const opt = document.createElement('option');
+        opt.value = prof.id;
+        opt.textContent = prof.nome;
+        profSelect.appendChild(opt);
+    });
+
+    // Populate disciplines select
+    const discSelect = document.getElementById('turmaDisciplinas');
+    discSelect.innerHTML = '';
+    disciplinas.filter(d => d.status === 'Ativo').forEach(disc => {
+        const opt = document.createElement('option');
+        opt.value = disc.id;
+        opt.textContent = disc.nome;
+        discSelect.appendChild(opt);
+    });
+
+    // Populate salas select
+    const salaSelect = document.getElementById('turmaSala');
+    salaSelect.innerHTML = '';
+    salas.filter(s => s.status === 'Ativo' && !s.turmaId).forEach(sala => {
+        const opt = document.createElement('option');
+        opt.value = sala.id;
+        opt.textContent = sala.nome;
+        salaSelect.appendChild(opt);
+    });
+}
+
+// Inicialização
+$(document).ready(function() {
+    // Add this at the beginning of the ready function:
+    loadFromStorage();
+
+    const disciplinasTable = document.getElementById('disciplinasTable');
+    if (disciplinasTable) {
+        $('#disciplinasTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
+            }
+        });
+    }
+    const professoresTable = document.getElementById('professoresTable');
+    if (professoresTable) {
+        $('#professoresTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
+            }
+        });
+    }
+    const salasTable = document.getElementById('salasTable');
+    if (salasTable) {
+        $('#salasTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
+            }
+        });
+    }
+    const turmasTable = document.getElementById('turmasTable');
+    if (turmasTable) {
+        $('#turmasTable').DataTable({
+            language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/pt-BR.json'
+            }
+        });
+    }
+
+    const initialModule = document.getElementById('disciplinas');
+    if (initialModule) {
+        showModule('disciplinas');
+    }
+
+    // Call populateSelects when showing forms
+    const oldShowForm = window.showForm;
+    window.showForm = function(type) {
+        oldShowForm(type);
+        populateSelects();
+    };
+
+    // Show tutorial modal on first visit
+    if (!localStorage.getItem('tutorialShown')) {
+        const tutorialModal = new bootstrap.Modal(document.getElementById('tutorialModal'));
+        tutorialModal.show();
+        localStorage.setItem('tutorialShown', 'true');
+    }
+});
+
+// Function to show tutorial
+window.showTutorial = function() {
+    const tutorialModal = new bootstrap.Modal(document.getElementById('tutorialModal'));
+    tutorialModal.show();
+};
+</script>
+
+</body>
+</html>
